@@ -1,0 +1,24 @@
+{
+  "name": "aegis",
+  "version": "1.0.0",
+  "description": "Test runner for NodeJS and browsers",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axel669/aegis.git"
+  },
+  "keywords": [
+    "aegis",
+    "test",
+    "browser"
+  ],
+  "author": "Axel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/axel669/aegis/issues"
+  },
+  "homepage": "https://github.com/axel669/aegis#readme"
+}
