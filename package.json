@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/axel669/aegis/issues"
   },
-  "homepage": "https://github.com/axel669/aegis#readme"
+  "homepage": "https://github.com/axel669/aegis#readme",
+  "dependencies": {
+    "fast-glob": "^3.2.11"
+  }
 }
