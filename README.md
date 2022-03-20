@@ -7,13 +7,19 @@ Normal npm/yarn stuff
 ## API
 
 ### `package.json` Usage
-`aegis <glob pattern> [hooks file]`
+> For running files that use es6 moduler syntax or commonjs
+> only works in node 12+
+> `aegis <glob pattern> [hooks file]`
+
+> For running files that don't use e6 module syuntax
+> works in node <12
+> `aegis-cjs <glob pattern> [hooks file]`
 ```json
 {
     ...,
     "scripts": {
-        "test-cjs-only": "aegis test/**/*.test.js",
         "test-modules-only": "aegis test/**/*.test.mjs",
+        "test-cjs-only": "aegis-cjs test/**/*.test.js",
         "test-all": "aegis \"test/**/*.test.{js,mjs}\" test/hooks.js"
     },
     ...
