@@ -1,55 +1,29 @@
+#!/usr/bin/env node
+
 const path = require("path")
-const { performance } = require("perf_hooks")
 
-const glob = require("fast-glob")
+const runTests = require("./lib/test-runner")
 
-const Query = require("./query")
-const report = require("./report")
+const defaultHooks = require("./lib/default-hooks")
 
-function last(array) {
-    return array[array.length - 1]
-}
-const count = {
-    pass: 0,
-    fail: 0,
-}
-const time = {}
-async function main() {
-    const files = await glob("test/**/*.test.js")
-    for (const file of files) {
-        const fullPath = path.resolve(file)
-        const env = {}
+const [, , filePattern, hooksFile = null] = process.argv
 
-        const sections = []
-        function Result(value, query) {
-            const res = Query(value, query)
-            last(sections)[1].push(res)
-
-            const key = res === true ? "pass" : "fail"
-            count[key] += 1
-            return res === true
-        }
-        function Section(label) {
-            sections.push([
-                label,
-                []
-            ])
-        }
-
-        console.group(file)
-        const start = performance.now()
-        const {test, before, after} = require(fullPath)
-        before?.(env)
-        await test({Result, Section}, env)
-        after?.(env)
-        const end = performance.now()
-        report(sections)
-        time[file] = end - start
-        console.groupEnd()
+function loadHooks(file) {
+    if (file === null) {
+        return defaultHooks
     }
-    console.log(`${count.pass} Passed`)
-    console.log(`${count.fail} Failed`)
-    console.log(time)
+    return {
+        ...defaultHooks,
+        ...require(
+            path.resolve(hooksFile)
+        )
+    }
 }
 
-main()
+runTests(
+    filePattern,
+    loadHooks(hooksFile),
+    function (path) {
+        return require(path)
+    }
+)
