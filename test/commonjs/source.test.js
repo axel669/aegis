@@ -5,18 +5,16 @@ exports.test = function({Assert, Section}, env) {
 
     Section("smol rand")
 
-    Assert(test, {
-        ":near": {
+    Assert(test)
+        .near({
             target: 0.5,
             delta: 0.6,
-        },
-        ":lt": 2,
-        ":gt": 0,
-    })
+        })
+        .lt(2)
+        .gt(0)
 
     Section("source?")
 
-    Assert(source, {
-        ":eq": 10
-    })
+    Assert(source)
+        .eq(10)
 }
