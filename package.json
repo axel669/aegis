@@ -1,6 +1,6 @@
 {
   "name": "@axel669/aegis",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Test runner for NodeJS and browsers",
   "main": "aegis-modules.mjs",
   "scripts": {
@@ -27,5 +27,10 @@
   "homepage": "https://github.com/axel669/aegis#readme",
   "dependencies": {
     "fast-glob": "^3.2.11"
-  }
+  },
+  "files": [
+    "aegis.js",
+    "aegis-modules.mjs",
+    "lib"
+  ]
 }
