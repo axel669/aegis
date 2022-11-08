@@ -30,8 +30,8 @@ export async function test({Assert, Section}, shared) {
 
     //  Assertions can be chained, see next section for details.
     Assert(obj)
-        ("test").gt(0)
-        ("test").lt(1)
+        `test`.gt(0)
+        `test`.lt(1)
     Assert(source)
         .neq(null)
 
@@ -70,16 +70,31 @@ Assert({ a: 10, b: 12.5 })
     //  comparison functions can be called on the resulting value, and the
     //  chain will go back to the original value for the next calls
     ("a").eq(10)
-    ("b").near({ target: 12.5, delta: 0.01 })
+    //  the chainable function can also be used with tagged template literals
+    //  as a shorthand for property access
+    `b`.near({ target: 12.5, delta: 0.01 })
     .has("a")
 
 Assert({ first: 0, second: 1, third: 2 })
     //  passing a function instead of a string will call the function and pass
     //  the value as the only argument, and use the result for the next part
     //  of the chain
-    (Object.keys)("length").eq(3)
+    (Object.keys)`length`.eq(3)
     (Object.values).includes(0)
 ```
+
+#### Built-in Assertions
+- eq
+- neq
+- lt
+- gt
+- lte
+- gte
+- near
+- isnan
+- isfinite
+- includes
+- has
 
 ### `package.json` Usage
 > For running files that use es6 moduler syntax or commonjs
