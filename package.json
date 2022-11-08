@@ -1,10 +1,10 @@
 {
   "name": "@axel669/aegis",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Test runner for NodeJS and browsers",
   "main": "aegis-modules.mjs",
   "scripts": {
-    "test": "node aegis-modules.mjs test/**/*.test.{js,mjs}"
+    "test": "node aegis-modules.mjs test/**/*.test.{js,mjs} test/hooks.mjs"
   },
   "bin": {
     "aegis": "aegis-modules.mjs",

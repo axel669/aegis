@@ -10,8 +10,8 @@ export async function test({Assert, Section}) {
     Section("modules pls work")
 
     Assert(obj)
-        ("test").gt(0)
-        ("test").lt(1)
+        `test`.gt(0)
+        `test`.lt(1)
     Assert(source)
         .neq(null)
 
@@ -20,7 +20,7 @@ export async function test({Assert, Section}) {
     Assert(list)
         .includes(3)
         .contains(3)
-        ("length").eq(10)
+        `length`.eq(10)
 
     Section("postman echo")
     const res = await fetch("https://postman-echo.com/get")
@@ -28,5 +28,9 @@ export async function test({Assert, Section}) {
 
     Assert(result)
         .has("args")
-        ("args")(Object.keys)("length").eq(0)
+        `args`(Object.keys)`length`.eq(0)
+
+    Section("custom assertions")
+    Assert(100)
+        .sqof(10)
 }
