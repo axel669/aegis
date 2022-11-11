@@ -23,7 +23,7 @@ async function loadHooks(file) {
     }
 }
 
-runTests(
+const passed = await runTests(
     filePattern,
     await loadHooks(hooksFile),
     function (path) {
@@ -32,3 +32,7 @@ runTests(
         )
     }
 )
+
+if (passed === false) {
+    process.exit(1)
+}

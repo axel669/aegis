@@ -26,4 +26,10 @@ runTests(
     function (path) {
         return require(path)
     }
+).then(
+    (passed) => {
+        if (passed === false) {
+            process.exit(1)
+        }
+    }
 )

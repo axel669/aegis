@@ -15,7 +15,7 @@ export async function test({Assert, Section}) {
     Assert(source)
         .neq(null)
 
-    Section("cool stuff")
+    Section `cool stuff`
 
     Assert(list)
         .includes(3)

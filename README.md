@@ -37,7 +37,7 @@ export async function test({Assert, Section}, shared) {
 
     //  A file can have as many section as it wants, but sections cannot
     //  be nested.
-    Section("cool stuff")
+    Section `cool stuff`
 
     Assert(list)
         .includes(3)
@@ -95,6 +95,30 @@ Assert({ first: 0, second: 1, third: 2 })
 - isfinite
 - includes
 - has
+
+#### Custom Assertions
+Custom assertions can be defined in the setup hook, by adding keys to the
+`assertions` argument that is passed to the hook.
+
+Assertions take the form of `(value, target) => bool`, where `value` is the
+current value of the Assert() and `target` is the argument passed to the
+assertion function in the test (`Assert(value).custom(target)`).
+```js
+export const setup = (shared, assertions) => {
+    assertions.sqof = (value, target) => value === (target ** 2)
+    //  maybe this one will become standard, why isn't it?
+    assertions.between = (value, options) => (
+        value >= options.min
+        && value <= options.max
+    )
+}
+```
+
+### Section
+The Section function marks a section in a file that will be used when outputting
+the results of assertions. Can either be called as a normal function with a
+string argument for the section name, or as a tagged template function
+because it looks pretty cool.
 
 ### `package.json` Usage
 > For running files that use es6 moduler syntax or commonjs

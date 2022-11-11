@@ -12,6 +12,7 @@ exports.test = function({Assert, Section}, env) {
         })
         .lt(2)
         .gt(0)
+        (() => { throw new Error("failed") }).eq("wat")
 
     Section("source?")
 
