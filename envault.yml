@@ -1,0 +1,9 @@
+apiKeyName: envault_alpha_key
+origin: https://envault-alpha.axel669.net
+vaults:
+  default:
+    vaultKeyName: envault_alpha_default_key
+    keys:
+      cf.personal.api_key: CLOUDFLARE_API_TOKEN
+      cf.personal.account: CLOUDFLARE_ACCOUNT_ID
+      npm.axel669: NPM_AUTH_TOKEN
