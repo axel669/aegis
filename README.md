@@ -1,168 +1,231 @@
 # Aegis
-Test runner for NodeJS (and browsers soon)
+Simple and fast test runner for Node and Browser environments.
 
 ## Installation
+
+### CLI
 ```bash
-yarn add @axel669/aegis
+npm add @axel669/aegis
 ```
 
-## API
-
-### Test Files
+### Browser
 ```js
-//  Import whatever resources needed, the glob automatically ignores
-//  node_modules folders.
-import fetch from "node-fetch"
-
-import source from "../source.js"
-
-//  Export a "test" function from each file to be run, optionally async.
-//  First argument is an object that contains an Assert and Section function.
-//  Second argument is an object that is shared between every test function and
-//  and can be modified by the hook functions described later.
-export async function test({Assert, Section}, shared) {
-    const test = Math.random()
-    const obj = { test }
-    const list = [1, 2, 3, 4]
-
-    //  Mark sections for the report to group results in.
-    Section("modules pls work")
-
-    //  Assertions can be chained, see next section for details.
-    Assert(obj)
-        `test`.gt(0)
-        `test`.lt(1)
-    Assert(source)
-        .neq(null)
-
-    //  A file can have as many section as it wants, but sections cannot
-    //  be nested.
-    Section `cool stuff`
-
-    Assert(list)
-        .includes(3)
-        .contains(3)
-        ("length").eq(10)
-
-    Section("postman echo")
-    const res = await fetch("https://postman-echo.com/get")
-    const result = await res.json()
-
-    Assert(result)
-        .has("args")
-        ("args")(Object.keys)("length").eq(0)
-}
+import run from "https://esm.sh/@axel669/aegis@0.3.0"
 ```
 
-### Assert
-The assert function takes a single argument with the value to use for the
-checks that follow. It returns an object that can either be called as a function
-or have comparison functions called.
+## Usage
+Aegis determines at import time if it should use the node or browser version.
+This means that all import names are the same and use the same library name
+between both envs, so that you dont have to think about where it runs, just
+what it runs.
 
+### Browser
 ```js
-//  value to use for ops
-Assert(100)
-    //  check if the value is equal to something else
-    .eq(100)
+import run from "https://esm.sh/@axel669/aegis"
+import config from "./aegis.browser.js"
 
-Assert({ a: 10, b: 12.5 })
-    //  calling the result as a function will get the named value
-    //  comparison functions can be called on the resulting value, and the
-    //  chain will go back to the original value for the next calls
-    ("a").eq(10)
-    //  the chainable function can also be used with tagged template literals
-    //  as a shorthand for property access
-    `b`.near({ target: 12.5, delta: 0.01 })
-    .has("a")
-
-Assert({ first: 0, second: 1, third: 2 })
-    //  passing a function instead of a string will call the function and pass
-    //  the value as the only argument, and use the result for the next part
-    //  of the chain
-    (Object.keys)`length`.eq(3)
-    (Object.values).includes(0)
+await run(config)
 ```
 
-#### Built-in Assertions
-- eq
-- neq
-- lt
-- gt
-- lte
-- gte
-- near
-- isnan
-- isfinite
-- includes
-- has
-
-#### Custom Assertions
-Custom assertions can be defined in the setup hook, by adding keys to the
-`assertions` argument that is passed to the hook.
-
-Assertions take the form of `(value, target) => bool`, where `value` is the
-current value of the Assert() and `target` is the argument passed to the
-assertion function in the test (`Assert(value).custom(target)`).
-```js
-export const setup = (shared, assertions) => {
-    assertions.sqof = (value, target) => value === (target ** 2)
-    //  maybe this one will become standard, why isn't it?
-    assertions.between = (value, options) => (
-        value >= options.min
-        && value <= options.max
-    )
-}
+### CLI
+```bash
+npx aegis test/aegis.config.js
 ```
 
-### Section
-The Section function marks a section in a file that will be used when outputting
-the results of assertions. Can either be called as a normal function with a
-string argument for the section name, or as a tagged template function
-because it looks pretty cool.
+The CLI command uses unique non-0 error codes when the test suite fails, with
+each error code representing a different condition for failure. This means that
+a command line script can react to the process results regardless of how the
+reporting is setup (no special of output needed to know what happened).
 
-### `package.json` Usage
-> For running files that use es6 moduler syntax or commonjs
-> only works in node 12+
-> `aegis <glob pattern> [hooks file]`
+#### Process Return Codes
+```
+0 - NO_ERROR
+1 - SUITE_FAILED
+2 - TEST_HAD_ERROR
+3 - CHECK_HAD_ERROR
+5 - SECTION_FAILED
+6 - COLLECTION_FAILED
+```
 
-> For running files that don't use e6 module syntax
-> works in node <12
-> `aegis-cjs <glob pattern> [hooks file]`
+### packge.json
 ```json
 {
     ...,
     "scripts": {
-        "test-modules-only": "aegis test/**/*.test.mjs",
-        "test-cjs-only": "aegis-cjs test/**/*.test.js",
-        "test-all": "aegis \"test/**/*.test.{js,mjs}\" test/hooks.js"
+        ...,
+        "test": "aegis test/aegis.config.js"
     },
     ...
 }
 ```
 
-### Hooks
+### Example Test
+```js
+import { Collection, $check, $ } from "@axel669/aegis"
+
+import { stack } from "./stack.js"
+
+const items = stack()
+export default Collection`Stack`({
+    "Is Empty": () => {
+        $check`is empty`
+            .value(items)
+            .eq($.size, 0)
+    },
+    "Empty Stack": () => {
+        $check`throws when asked for top`
+            .call(() => items.top)
+            .throws()
+        $check`throws when popped`
+            .call(items.pop)
+            .throws()
+
+        items.push(1)
+        $check`gains depth when pushed to`
+            .value(items)
+            .eq($.size, 1)
+    },
+    "Non Empty Stack": () => {
+        items.push(2)
+        $check`gains more depth when pushed`
+            .value(items.size)
+            .eq($, 2)
+        const values = [items.pop(), items.pop()]
+        $check`pops values in reverse order of push`
+            .value(values)
+            .eq($[0], 2)
+            .eq($[1], 1)
+    },
+})
+```
+
+## API
+
+### `default` export & config
+The default export is a function that takes in an env-specific configuration
+object and runs the tests specified by the config.
+```js
+const config = {
+    // In Node, files is an array of strings that are file globs.
+    // In the browser, files is an array of imports that will be loaded
+    // by the page and run.
+    files: [
+        "test/**/*.test.mjs"
+    ],
+    hooks: {
+        // The setup and teardown functions run at the start and end of the test
+        // suite. The runScope argument is an object that is passed into every
+        // test that is run and shared between them all.
+        setup(runScope) {},
+        teardown(runScope) {},
+
+        // Runs at the start and end of a collection being run.
+        // The collectionInfo argument is the property of the same name from a
+        // collection object documented later in the readme.
+        collectionStart(collectionInfo) {},
+        // collection === null if an early exit happens from a failed check.
+        collectionEnd(collection) {},
+
+        // Runs at the start and end of a section being run.
+        // The sectionInfo argument is the property of the same name from a
+        // section object documented later in the readme.
+        sectionStart(sectionInfo) {},
+        // section === null if an early exit happens from a failed check.
+        sectionEnd(section) {},
+    },
+    // A function that is called with the results of the enture test suite,
+    // after all tests have finished (or from an early exit).
+    report: (suiteResults) => {},
+    // Can be set to "afterSection" or "afterCollection" to have the test suite
+    // exit as soon as a check fails in a section or collection. Default runs
+    // all tests without stopping on failures.
+    failAction: "ignore",
+}
+```
+
+### Collection
+Creates a collection of tests to be run. Abuses the tagged template literal
+syntax to allow putting a label for the collection inline. Since ES2015 the
+order that keys are added to an object determines the order they are given when
+iterating, allowing an object with full string keys to be used for ordering the
+individual tests as well.
+
+### $check
+The structure that allows creating checks for a test. Like the collection, it
+allows a label for the check to be added with the tagged template literal
+syntax.
+
+The type of check that needs to be run is determined by the first function call
+(`.value` of `.call`). Value checks take the value as is (with promises being
+awaited as normal), while call checks call the function and then pass the result
+into a value check for the user, while also catching errors that can be checked
+against. Subsequent functions in the chain add checks to be run. A later section
+of this readme lists the built-in checks, and how to add custom checks.
+
+### $
+A magic structure that describes what part of a value or call result needs to be
+checked. It does not have a value itself, it only creates a chain that is used
+internally to retrive values from objects, allowing multiple checks to be done
+on different properties of a single object without creating new check labels
+for each of them. The examples in the readme and the repo show how it can be
+used for any kind of property/function access on an object.
+
+> NOTE: In order to keep the syntax clean and not throw unnecessary errors on
+> property access, the chain uses optional chaining at all points.
+> `$.a.b() === value?.a?.b?.()`
+
+## Test File Format
+Test files should export a single collection (maybe change in the future?).
+Collections are run in the order they are found in the blob strings. This means
+individual files can be put earlier in the array of globs if you want to run
+them before other files.
+
+### Built-in Checks
+Most checks are designed to work on a value (or return from a call), but they
+can also be registered to act on the errors thrown by functions. The list below
+has all the built in checks for values and errors that are in the library by
+default.
+
+- For values
+    - eq($, value)
+    - neq($, value)
+    - lt($, value)
+    - gt($, value)
+    - lte($, value)
+    - gte($, value)
+    - between($, low, high)
+    - in($, low, high)
+    - near($, value, delta)
+    - isnan($)
+    - isfinite($)
+    - includes($, value)
+    - contains($, value)
+    - has($, value)
+    - hasProp($, propName)
+- For errors
+    - throws($[, message[, errorType]])
+
+### Custom Checks
+Custom checks can be created and used within test files. The library has an
+export that allows creating checks and registering the type of result they are
+used for with a simple syntax.
+
+All checks need to be synchronous functions and should return `true` if the
+check passes, `false` otherwise.
 
 ```js
-//  setup is run before all tests begin and is given an object that is shared
-//  between all test runs, and sent to the teardown hook at the end.
-exports.setup = function(shared) {
-    console.log("Running tests")
-    console.log("=".repeat(60))
-}
+import { addCheck } from "@axel669/aegis"
 
-//  beforeFile/afterFile are called before and after a file's test has been
-//  run, after the file's test has been loaded.
-exports.beforeFile = function(filename) {
-    console.log("running", filename)
-}
-
-exports.afterFile = function(filename) {
-}
-
-//  teardown is run after all tests have completed, but before the results
-//  have been reported. Should be used to cleanup resources that were shared
-//  from setup.
-exports.teardown = function(shared) {
-    console.log("=".repeat(60))
-}
+// Checks if a value is a square number (doesn't take extra args)
+addCheck.value.isSq(
+    (source) => {
+        const root = Math.sqrt(source)
+        const fractional = root % 1
+        return fractional === 0
+    }
+)
+// checks if a string is the reverse of a target string
+addCheck.value.reverseOf(
+    (source, value) => source.split("").reverse().join("") === value
+)
 ```

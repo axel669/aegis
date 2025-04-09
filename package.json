@@ -1,15 +1,15 @@
 {
   "name": "@axel669/aegis",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "description": "Test runner for NodeJS and browsers",
-  "main": "aegis-modules.mjs",
+  "main": "lib/main.js",
+  "type": "module",
   "scripts": {
-    "test": "node aegis-modules.mjs test/**/*.test.{js,mjs} test/hooks.mjs",
-    "test-cjs": "node aegis.js test/**/*.test.js"
+    "run-browser": "wrangler pages dev . --port=1337",
+    "run-tests": "aegis test/aegis.config.js"
   },
   "bin": {
-    "aegis": "aegis-modules.mjs",
-    "aegis-cjs": "aegis.js"
+    "aegis": "./lib/cli.js"
   },
   "repository": {
     "type": "git",
@@ -30,8 +30,9 @@
     "fast-glob": "^3.2.11"
   },
   "files": [
-    "aegis.js",
-    "aegis-modules.mjs",
     "lib"
-  ]
+  ],
+  "exports": {
+    ".": "./lib/main.js"
+  }
 }

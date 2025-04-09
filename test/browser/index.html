@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1,maximum-scale=5,minimum-scale=1,width=device-width">
+        <title>Test</title>
+    </head>
+    <body ws-x="@@theme:tron">
+        <script src="https://cdn.jsdelivr.net/npm/@axel669/windstorm@0.5.4/dist/browser.js"></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "aegis": "../../scratch/browser.js"
+                }
+            }
+        </script>
+        <!-- <script type="module" src="http://127.0.0.1:1337/scratch/browser.js?config=./aegis.browser.js"></script> -->
+        <script type="module">
+            import run from "http://127.0.0.1:1337/lib/main.js"
+            import config from "./aegis.browser.js"
+
+            console.log(
+                await run(config)
+            )
+        </script>
+        <!-- <script type="module" src="./browser.js"></script> -->
+    </body>
+</html>
