@@ -2,7 +2,7 @@
   "name": "@axel669/aegis",
   "version": "0.3.0",
   "description": "Test runner for NodeJS and browsers",
-  "main": "aegis-modules.mjs",
+  "main": "lib/main.js",
   "type": "module",
   "scripts": {
     "run-browser": "wrangler pages dev . --port=1337",
