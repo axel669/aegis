@@ -166,7 +166,7 @@ type SectionFail = Expand<{
 
 type CollectionFail = Expand<{
     type: "collection-fail"
-    file: CollectionResult
+    collection: CollectionResult
 }>
 
 type TestResult = Expand<
