@@ -1,9 +1,6 @@
 type Expand<T> = {
     [K in keyof T]: T[K]
 } & {}
-type ExpandRecursively<T> = T extends object
-  ? T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> } : never
-  : T;
 
 type Optional<T> = {
     [K in keyof T]?: T[K]
