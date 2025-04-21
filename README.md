@@ -10,7 +10,7 @@ npm add @axel669/aegis
 
 ### Browser
 ```js
-import run from "https://esm.sh/@axel669/aegis@0.3.0"
+import run from "https://esm.sh/@axel669/aegis@0.3.1"
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ what it runs.
 
 ### Browser
 ```js
-import run from "https://esm.sh/@axel669/aegis"
+import run from "https://esm.sh/@axel669/aegis@0.3.1"
 import config from "./aegis.browser.js"
 
 await run(config)
@@ -29,13 +29,13 @@ await run(config)
 
 ### CLI
 ```bash
-npx aegis test/aegis.config.js
+npx aegis [config-file]
 ```
 
 The CLI command uses unique non-0 error codes when the test suite fails, with
 each error code representing a different condition for failure. This means that
 a command line script can react to the process results regardless of how the
-reporting is setup (no special of output needed to know what happened).
+reporting is setup (no special type of output needed to know what happened).
 
 #### Process Return Codes
 ```
@@ -242,6 +242,8 @@ export default Collection`Number Generator`({
             .in($, 0, 10)
         runScope.n = n
     },
+    // If a test doesn't need the fileScope (or the runScope) it can just ignore
+    // that part of the argument
     "Scope Value Example": ({ runScope }) => {
         $check`is a number`
             .value(runScope.n)
