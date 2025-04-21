@@ -10,7 +10,7 @@ npm add @axel669/aegis
 
 ### Browser
 ```js
-import run from "https://esm.sh/@axel669/aegis@0.3.0"
+import run from "https://esm.sh/@axel669/aegis@0.3.1"
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ what it runs.
 
 ### Browser
 ```js
-import run from "https://esm.sh/@axel669/aegis"
+import run from "https://esm.sh/@axel669/aegis@0.3.1"
 import config from "./aegis.browser.js"
 
 await run(config)
@@ -29,13 +29,13 @@ await run(config)
 
 ### CLI
 ```bash
-npx aegis test/aegis.config.js
+npx aegis [config-file]
 ```
 
 The CLI command uses unique non-0 error codes when the test suite fails, with
 each error code representing a different condition for failure. This means that
 a command line script can react to the process results regardless of how the
-reporting is setup (no special of output needed to know what happened).
+reporting is setup (no special type of output needed to know what happened).
 
 #### Process Return Codes
 ```
@@ -59,63 +59,24 @@ reporting is setup (no special of output needed to know what happened).
 }
 ```
 
-### Example Test
+### Config File Format
+The config file can have any name, as long as it's a js file that has "config"
+as a named export.
 ```js
-import { Collection, $check, $ } from "@axel669/aegis"
-
-import { stack } from "./stack.js"
-
-const items = stack()
-export default Collection`Stack`({
-    "Is Empty": () => {
-        $check`is empty`
-            .value(items)
-            .eq($.size, 0)
-    },
-    "Empty Stack": () => {
-        $check`throws when asked for top`
-            .call(() => items.top)
-            .throws()
-        $check`throws when popped`
-            .call(items.pop)
-            .throws()
-
-        items.push(1)
-        $check`gains depth when pushed to`
-            .value(items)
-            .eq($.size, 1)
-    },
-    "Non Empty Stack": () => {
-        items.push(2)
-        $check`gains more depth when pushed`
-            .value(items.size)
-            .eq($, 2)
-        const values = [items.pop(), items.pop()]
-        $check`pops values in reverse order of push`
-            .value(values)
-            .eq($[0], 2)
-            .eq($[1], 1)
-    },
-})
-```
-
-## API
-
-### `default` export & config
-The default export is a function that takes in an env-specific configuration
-object and runs the tests specified by the config.
-```js
-const config = {
+export const config = {
     // In Node, files is an array of strings that are file globs.
     // In the browser, files is an array of imports that will be loaded
     // by the page and run.
     files: [
         "test/**/*.test.mjs"
     ],
+    // Every hook is optional, and Aegis has its own versions of the hooks
+    // internally that will be run for any that are not provided.
     hooks: {
         // The setup and teardown functions run at the start and end of the test
         // suite. The runScope argument is an object that is passed into every
-        // test that is run and shared between them all.
+        // test that is run and shared between them all. The object can have any
+        // property added to it to pass values throughout a test suite run.
         setup(runScope) {},
         teardown(runScope) {},
 
@@ -135,13 +96,98 @@ const config = {
     },
     // A function that is called with the results of the enture test suite,
     // after all tests have finished (or from an early exit).
+    // The suiteResults object can be one of many objects, documented below.
     report: (suiteResults) => {},
     // Can be set to "afterSection" or "afterCollection" to have the test suite
-    // exit as soon as a check fails in a section or collection. Default runs
-    // all tests without stopping on failures.
+    // exit as soon as a check fails in a section or collection. Default
+    // "ignore"runs all tests without stopping on failures.
     failAction: "ignore",
 }
 ```
+
+#### suiteResults
+The suiteResults is one of these objects based on the settings and test results.
+```js
+// a test had an uncaught error
+TestIssue = {
+    type: "test-error"
+    error: Error
+}
+// a check function threw an error
+CheckIssue = {
+    type: "check-error"
+    errors[]: {
+        error: Error
+    }
+}
+// a section had a failure and failAction === "afterSection"
+SectionFail = {
+    type: "section-fail"
+    section: SectionResult
+}
+// a collection had a failure and failAction === "afterCollection"
+CollectionFail = {
+    type: "collection-fail"
+    collection: CollectionResult
+}
+// all tests passed or failAction === "ignore"
+SuiteResult = {
+    type: "complete";
+    results[]: CollectionResult
+    runTime: number
+    checks[]: CheckResult
+    pass[]: CheckResult
+    fail[]: CheckResult
+    loadTime: number
+}
+
+// supplementary types
+CollectionResult = {
+    info: {
+        name: string
+        file: string
+    }
+    sections[]: SectionResult
+    runTime: number
+    checks[]: CheckResult
+    pass[]: CheckResult
+    fail[]: CheckResult
+    loadTime: number
+}
+SectionResult = {
+    info: {
+        name: string
+        collection: CollectionResult
+    }
+    labels[]: LabelResult
+    runTime: number
+    checks[]: CheckResult
+    pass[]: CheckResult
+    fail[]: CheckResult
+}
+LabelResult = {
+    label: string
+    checks[]: CheckResult
+    pass[]: CheckResult
+    fail[]: CheckResult
+}
+CheckResult = PassedCheck | FailedCheck
+PassedCheck = {
+    status: "pass"
+    label: string
+}
+FailedCheck = {
+    status: "fail"
+    label: string
+    report: string
+    message: string
+    value: any
+    name: string
+    args[]: any
+}
+```
+
+## API
 
 ### Collection
 Creates a collection of tests to be run. Abuses the tagged template literal
@@ -180,6 +226,33 @@ Collections are run in the order they are found in the blob strings. This means
 individual files can be put earlier in the array of globs if you want to run
 them before other files.
 
+#### Example Test
+```js
+import { Collection, $check, $ } from "@axel669/aegis"
+
+const rand = () => Math.random() * 10
+export default Collection`Number Generator`({
+    // runScope comes from the setup method, and can be modified by any test
+    // during the runtime. fileScope is created when the tests in the file are
+    // run, and is destroyed once they finish.
+    "Creates correct range": ({ runScope, fileScope }) => {
+        const n = rand()
+        $check`is in range 0 <= n <= 10`
+            .value(n)
+            .in($, 0, 10)
+        runScope.n = n
+    },
+    // If a test doesn't need the fileScope (or the runScope) it can just ignore
+    // that part of the argument
+    "Scope Value Example": ({ runScope }) => {
+        $check`is a number`
+            .value(runScope.n)
+            .typeof($, "number")
+            .instanceof($, Number)
+    }
+})
+```
+
 ### Built-in Checks
 Most checks are designed to work on a value (or return from a call), but they
 can also be registered to act on the errors thrown by functions. The list below
@@ -202,6 +275,8 @@ default.
     - contains($, value)
     - has($, value)
     - hasProp($, propName)
+    - typeof($, type)
+    - instanceof($, objectType)
 - For errors
     - throws($[, message[, errorType]])
 
@@ -218,14 +293,14 @@ import { addCheck } from "@axel669/aegis"
 
 // Checks if a value is a square number (doesn't take extra args)
 addCheck.value.isSq(
-    (source) => {
-        const root = Math.sqrt(source)
+    (value) => {
+        const root = Math.sqrt(value)
         const fractional = root % 1
         return fractional === 0
     }
 )
 // checks if a string is the reverse of a target string
 addCheck.value.reverseOf(
-    (source, value) => source.split("").reverse().join("") === value
+    (value, target) => value.split("").reverse().join("") === target
 )
 ```
