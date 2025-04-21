@@ -1,3 +1,11 @@
+## 0.3.1
+- _bugfix_ condition and report for failAction = "afterCollection"
+- _add_ type garnish for LSPs
+- _change_ clearer and more descriptive readme docs
+
+## 0.3.0
+- massive rewrite of internals
+
 ## 0.2.7
 - changed failed assertion output to handle larger objects when using with
     other frameworks for performing test validation
