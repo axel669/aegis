@@ -9,7 +9,7 @@
     "run-tests": "aegis test/aegis.config.js"
   },
   "bin": {
-    "aegis": "./lib/cli.js"
+    "aegis": "./lib/runner.js"
   },
   "repository": {
     "type": "git",
@@ -27,12 +27,13 @@
   },
   "homepage": "https://github.com/axel669/aegis#readme",
   "dependencies": {
+    "@axel669/result": "^0.2.1",
     "fast-glob": "^3.2.11"
   },
   "files": [
     "lib"
   ],
   "exports": {
-    ".": "./lib/main.js"
+    ".": "./lib/test-funcs.js"
   }
 }

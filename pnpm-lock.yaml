@@ -8,11 +8,17 @@ importers:
 
   .:
     dependencies:
+      '@axel669/result':
+        specifier: ^0.2.1
+        version: 0.2.1
       fast-glob:
         specifier: ^3.2.11
         version: 3.3.3
 
 packages:
+
+  '@axel669/result@0.2.1':
+    resolution: {integrity: sha512-M5ujNYsQaIv0I0uQrZTxSrFnaz9tt6IwoGRvwLE5c2MWPFvz7nlI9qzjChb1mGl5M7sL+pmshexDkjJoRsI9Hg==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -84,6 +90,8 @@ packages:
     engines: {node: '>=8.0'}
 
 snapshots:
+
+  '@axel669/result@0.2.1': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
