@@ -1,6 +1,6 @@
 import { aegis, $ } from "@axel669/aegis"
 
-import { stack } from "./source-code.mjs"
+import { stack } from "./source-code.js"
 
 const items = stack()
 const wait = (time) => new Promise(
@@ -27,8 +27,7 @@ aegis.test({
     },
     timeout: 3_000
 })
-aegis.test({
-    name: "Empty Stack",
+aegis.test`Empty Stack`({
     func: async () => {
         $.check`throws when asked for top`(
             $.throws(() => items.top)
@@ -44,8 +43,7 @@ aegis.test({
         )
     },
 })
-aegis.test({
-    name: "Non Empty Stack",
+aegis.test`Non Empty Stack`({
     func: () => {
         items.push(2)
         $.check`gains more depth when pushed`(
@@ -59,8 +57,7 @@ aegis.test({
         )
     },
 })
-aegis.test({
-    name: "Errors Print Properly",
+aegis.test`Errors Print Properly`({
     func: () => {
         $.check`check failed`(
             $.eq(1, 2)
