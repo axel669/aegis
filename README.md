@@ -1,16 +1,19 @@
 # Aegis
-Simple and fast test runner for Node and Browser environments.
+Simple and fast test runner for Node.
+
+## TODO
+- Add config for exiting the test process early on certain kinds of failures
+- Maybe some default log reporting?
+
+## Notes from prev version
+- setup/teardown hooks are gone because you can just add files in the files
+    section to run before and after all the tests.
 
 ## Installation
 
 ### CLI
 ```bash
-npm add @axel669/aegis
-```
-
-### Browser
-```js
-import run from "https://esm.sh/@axel669/aegis@0.3.1"
+pnpm add @axel669/aegis
 ```
 
 ## Usage
@@ -19,20 +22,12 @@ This means that all import names are the same and use the same library name
 between both envs, so that you dont have to think about where it runs, just
 what it runs.
 
-### Browser
-```js
-import run from "https://esm.sh/@axel669/aegis@0.3.1"
-import config from "./aegis.browser.js"
-
-await run(config)
-```
-
 ### CLI
 ```bash
-npx aegis [config-file]
+npx aegis -c [config-file]
 ```
 
-The CLI command uses unique non-0 error codes when the test suite fails, with
+<!-- The CLI command uses unique non-0 error codes when the test suite fails, with
 each error code representing a different condition for failure. This means that
 a command line script can react to the process results regardless of how the
 reporting is setup (no special type of output needed to know what happened).
@@ -45,7 +40,7 @@ reporting is setup (no special type of output needed to know what happened).
 3 - CHECK_HAD_ERROR
 5 - SECTION_FAILED
 6 - COLLECTION_FAILED
-```
+``` -->
 
 ### packge.json
 ```json
@@ -53,7 +48,7 @@ reporting is setup (no special type of output needed to know what happened).
     ...,
     "scripts": {
         ...,
-        "test": "aegis test/aegis.config.js"
+        "test": "aegis -c test/aegis.config.js"
     },
     ...
 }
@@ -63,45 +58,50 @@ reporting is setup (no special type of output needed to know what happened).
 The config file can have any name, as long as it's a js file that has "config"
 as a named export.
 ```js
-export const config = {
-    // In Node, files is an array of strings that are file globs.
-    // In the browser, files is an array of imports that will be loaded
-    // by the page and run.
-    files: [
-        "test/**/*.test.mjs"
-    ],
-    // Every hook is optional, and Aegis has its own versions of the hooks
-    // internally that will be run for any that are not provided.
-    hooks: {
-        // The setup and teardown functions run at the start and end of the test
-        // suite. The runScope argument is an object that is passed into every
-        // test that is run and shared between them all. The object can have any
-        // property added to it to pass values throughout a test suite run.
-        setup(runScope) {},
-        teardown(runScope) {},
+// An array of strings that are file globs.
+// If globs share file matches, the file is only run once at the first glob
+// that matched it.
+// This example would run the first.test.js file before all other test files
+// which is great if you want to run a setup file, or even inject setups
+// between bunches of tests, or if you want to run code after all tests.
+export const files = [
+    "test/first.test.js",
+    "test/**/*.test.js"
+]
+// Every hook is optional, and Aegis has its own versions of the hooks
+// internally that will be run for any that are not provided.
+export const hooks = {
+    // Runs when a file gets loaded
+    "file.start": (fileInfo, defaultHook) => {}
+    // Runs after all tests in a file are complete
+    "file.end": (fileResults, defaultHook) => {}
 
-        // Runs at the start and end of a collection being run.
-        // The collectionInfo argument is the property of the same name from a
-        // collection object documented later in the readme.
-        collectionStart(collectionInfo) {},
-        // collection === null if an early exit happens from a failed check.
-        collectionEnd(collection) {},
+    // Runs when right before a test is run
+    "test.start": (testConfig, defaultHook) => {}
+    // Runs after a test finishes
+    "test.end": (testResults, defaultHook) => {}
 
-        // Runs at the start and end of a section being run.
-        // The sectionInfo argument is the property of the same name from a
-        // section object documented later in the readme.
-        sectionStart(sectionInfo) {},
-        // section === null if an early exit happens from a failed check.
-        sectionEnd(section) {},
-    },
-    // A function that is called with the results of the enture test suite,
-    // after all tests have finished (or from an early exit).
-    // The suiteResults object can be one of many objects, documented below.
-    report: (suiteResults) => {},
-    // Can be set to "afterSection" or "afterCollection" to have the test suite
-    // exit as soon as a check fails in a section or collection. Default
-    // "ignore"runs all tests without stopping on failures.
-    failAction: "ignore",
+    // Runs after all tests are finished and after all files have been handled
+    "done": (results, defaultHook) => {}
+}
+```
+
+**Data Format**
+```ts
+type Results = {
+    totalTime: number
+    runtime: number
+    load: number
+    count: {
+        pass: int
+        fail: int
+        total: int
+    }
+    results: Array<{
+        // FileInfo
+        name: string
+        path: string
+    }>
 }
 ```
 
