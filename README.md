@@ -64,16 +64,22 @@ as a named export.
 ```js
 // An array of strings that are file globs.
 // If globs share file matches, the file is only run once at the first glob
-// that matched it.
-// This example would run the first.test.js file before all other test files
-// which is great if you want to run a setup file, or even inject setups
-// between bunches of tests, or if you want to run code after all tests.
+// that matched it. Files starting with "setup:" will be run as scripts that
+// run code for managing global state, and will be reported as such. Any tests
+// defined in them will not be run, but any aegis.setup calls will be. Entries
+// defined this way will be treated as single files, not as file globs.
+// This example would run load-things.js file first, then the first.test.js file
+// before all other test files, because the first.test.js was matched in an
+// earlier glob, before it was found in test/**/*.test.js.
 export const files = [
+    "setup:test/load-things.js",
     "test/first.test.js",
     "test/**/*.test.js"
 ]
 // Every hook is optional, and Aegis has its own versions of the hooks
-// internally that will be run for any that are not provided.
+// internally that will be run for any that are not provided. The default Aegis
+// hook is also passed into custom hooks, so the original behavior can be called
+// in addition to any custom behavior.
 export const hooks = {
     // Runs when a file gets loaded
     "file.start": (fileInfo, defaultHook) => {}
