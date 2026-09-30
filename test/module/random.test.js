@@ -15,7 +15,8 @@ const asyncFunc = async () => {
 aegis.createAssertion({
     name: "squared",
     type: "value",
-    run: (target, sq) => (target ** 2) === sq
+    run: (target, sq) => (target ** 2) === sq,
+    error: (target, sq) => `${sq} is not the square of ${target}`,
 })
 export const name = "Random Stuff"
 aegis.test`Property Access`({
