@@ -3,7 +3,11 @@ Simple and fast test runner for Node.
 
 ## TODO
 - Add config for exiting the test process early on certain kinds of failures
+- Allow running subset of tests within files somehow
+    - Add an export to skip a specific file maybe?
 - Maybe some default log reporting?
+- Add back in the cli error codes at some point once the internals are better
+    decided around certain failures
 
 ## Notes from prev version
 - setup/teardown hooks are gone because you can just add files in the files
@@ -101,206 +105,150 @@ type Results = {
         // FileInfo
         name: string
         path: string
+        // FileResult
+        tests: Array<{
+            // TestInfo
+            setup: bool
+            name: string
+            // TestResults
+            count: {
+                pass: int
+                fail: int
+                total: int
+            }
+            runtime: number
+            results: Array<{
+                name: string
+                count: {
+                    pass: int
+                    fail: int
+                    total: int
+                }
+                results: Array<{
+                    pass: boolean
+                    name: string
+                    line: int
+                    message: string?
+                }>
+            }>
+        }>
     }>
-}
-```
-
-#### suiteResults
-The suiteResults is one of these objects based on the settings and test results.
-```js
-// a test had an uncaught error
-TestIssue = {
-    type: "test-error"
-    error: Error
-}
-// a check function threw an error
-CheckIssue = {
-    type: "check-error"
-    errors[]: {
-        error: Error
-    }
-}
-// a section had a failure and failAction === "afterSection"
-SectionFail = {
-    type: "section-fail"
-    section: SectionResult
-}
-// a collection had a failure and failAction === "afterCollection"
-CollectionFail = {
-    type: "collection-fail"
-    collection: CollectionResult
-}
-// all tests passed or failAction === "ignore"
-SuiteResult = {
-    type: "complete";
-    results[]: CollectionResult
-    runTime: number
-    checks[]: CheckResult
-    pass[]: CheckResult
-    fail[]: CheckResult
-    loadTime: number
-}
-
-// supplementary types
-CollectionResult = {
-    info: {
-        name: string
-        file: string
-    }
-    sections[]: SectionResult
-    runTime: number
-    checks[]: CheckResult
-    pass[]: CheckResult
-    fail[]: CheckResult
-    loadTime: number
-}
-SectionResult = {
-    info: {
-        name: string
-        collection: CollectionResult
-    }
-    labels[]: LabelResult
-    runTime: number
-    checks[]: CheckResult
-    pass[]: CheckResult
-    fail[]: CheckResult
-}
-LabelResult = {
-    label: string
-    checks[]: CheckResult
-    pass[]: CheckResult
-    fail[]: CheckResult
-}
-CheckResult = PassedCheck | FailedCheck
-PassedCheck = {
-    status: "pass"
-    label: string
-}
-FailedCheck = {
-    status: "fail"
-    label: string
-    report: string
-    message: string
-    value: any
-    name: string
-    args[]: any
 }
 ```
 
 ## API
 
-### Collection
-Creates a collection of tests to be run. Abuses the tagged template literal
-syntax to allow putting a label for the collection inline. Since ES2015 the
-order that keys are added to an object determines the order they are given when
-iterating, allowing an object with full string keys to be used for ordering the
-individual tests as well.
+### `aegis.setup`
+Defines a function in the test suite that does not have checks. Has access to
+the fileState like a test, so can be used to setup file state for tests to use.
 
-### $check
-The structure that allows creating checks for a test. Like the collection, it
-allows a label for the check to be added with the tagged template literal
-syntax.
+### `aegis.test`
+Defines a test that can have any number of checks. Tests are executed in the
+order they are defined in the file, but Aegis handles running the actual
+functions. Code outside of test/setup functions will always run before any setup
+or test functions are, even if the code appears between test declarations.
 
-The type of check that needs to be run is determined by the first function call
-(`.value` of `.call`). Value checks take the value as is (with promises being
-awaited as normal), while call checks call the function and then pass the result
-into a value check for the user, while also catching errors that can be checked
-against. Subsequent functions in the chain add checks to be run. A later section
-of this readme lists the built-in checks, and how to add custom checks.
+### `$.check`
+Collects a series of checks under a name so that it can be reported out nicely.
 
-### $
-A magic structure that describes what part of a value or call result needs to be
-checked. It does not have a value itself, it only creates a chain that is used
-internally to retrive values from objects, allowing multiple checks to be done
-on different properties of a single object without creating new check labels
-for each of them. The examples in the readme and the repo show how it can be
-used for any kind of property/function access on an object.
+### `$.<assertion>`
+Runs an assertion using the arguments provided. If the name of the assertion
+ends with `Async` the assertion must be awaited or it will not be processed
+correctly. Below is a list of assertions that Aegis has built in, and the
+section after that will explain how to add custom assertions.
 
-> NOTE: In order to keep the syntax clean and not throw unnecessary errors on
-> property access, the chain uses optional chaining at all points.
-> `$.a.b() === value?.a?.b?.()`
+Value assertions take a value and check against the value provided. Function
+assertions take a function, call the function, and then are checked against
+the result of that call. If the async version of an assertion is used, it will
+await the value or await the function call as needed. Function assertions are
+wrapped in a Result object that has the following properties:
+
+```js
+// If the function does not throw
+type Result = {
+    ok: true
+    // the return value of the function
+    value: any
+}
+// If the function does throw
+type Result = {
+    ok: false
+    // the error that was thrown, unmodified
+    error: Error
+}
+```
+
+- For values
+    - eq(value, target)
+    - neq(value, target)
+    - lt(value, target)
+    - gt(value, target)
+    - lte(value, target)
+    - gte(value, target)
+    - between(value, low, high)
+    - in(value, low, high)
+    - near(value, target, delta)
+    - isnan(value)
+    - isfinite(value)
+    - includes(value, target)
+    - contains(value, target)
+    - has(value, target)
+    - hasProp(value, propName)
+    - typeof(value, type)
+    - instanceof(value, objectType)
+- For functions
+    - throws(func)
+
+### aegis.createAssertion
+Creates a custom assertion function that can be used in any test after it is
+defined. Async versions of assertions are created automatically and do not need
+to be made separately.
+
+```js
+aegis.createAssertion({
+    // assertion name
+    name: "squared",
+    // assertion type: value or func
+    type: "value",
+    // the code that is run for the assertion
+    run: (target, sq) => (target ** 2) === sq,
+    // optional function that formats failure messages
+    error: (target, sq) => `${sq} is not the square of ${target}`,
+})
+```
 
 ## Test File Format
-Test files should export a single collection (maybe change in the future?).
-Collections are run in the order they are found in the blob strings. This means
-individual files can be put earlier in the array of globs if you want to run
-them before other files.
+Test files should contain one or more tests (and the default reporting will warn
+if no tests are defined in a file). Any code can be run before the tests are
+run, doing any setup necessary. All code runs in aa separate thread from the
+main thread, but all tests are run in the same thread, so using the fileState
+and globalState to share data does not need to worry about cross-thread
+serialization to work.
+
+A test file can export a `name` that will be used in the reporting of the
+results from the test within the file.
 
 #### Example Test
 ```js
 import { Collection, $check, $ } from "@axel669/aegis"
 
 const rand = () => Math.random() * 10
-export default Collection`Number Generator`({
-    // runScope comes from the setup method, and can be modified by any test
-    // during the runtime. fileScope is created when the tests in the file are
-    // run, and is destroyed once they finish.
-    "Creates correct range": ({ runScope, fileScope }) => {
-        const n = rand()
-        $check`is in range 0 <= n <= 10`
-            .value(n)
-            .in($, 0, 10)
-        runScope.n = n
-    },
-    // If a test doesn't need the fileScope (or the runScope) it can just ignore
-    // that part of the argument
-    "Scope Value Example": ({ runScope }) => {
-        $check`is a number`
-            .value(runScope.n)
-            .typeof($, "number")
-            .instanceof($, Number)
+import { aegis, $ } from "@axel669/aegis"
+
+const rand = () => Math.random() * 10
+
+const n = rand()
+
+export const name = "Random Number Testing"
+aegis.test`Creates Correct Range`(
+    () => {
+        $.check`number is in correct range`(
+            $.within(n, 0, 10)
+        )
+        $.check`type is correct`(
+            $.typeof(n, "number"),
+            $.instanceof(n, Number)
+        )
     }
-})
-```
-
-### Built-in Checks
-Most checks are designed to work on a value (or return from a call), but they
-can also be registered to act on the errors thrown by functions. The list below
-has all the built in checks for values and errors that are in the library by
-default.
-
-- For values
-    - eq($, value)
-    - neq($, value)
-    - lt($, value)
-    - gt($, value)
-    - lte($, value)
-    - gte($, value)
-    - between($, low, high)
-    - in($, low, high)
-    - near($, value, delta)
-    - isnan($)
-    - isfinite($)
-    - includes($, value)
-    - contains($, value)
-    - has($, value)
-    - hasProp($, propName)
-    - typeof($, type)
-    - instanceof($, objectType)
-- For errors
-    - throws($[, message[, errorType]])
-
-### Custom Checks
-Custom checks can be created and used within test files. The library has an
-export that allows creating checks and registering the type of result they are
-used for with a simple syntax.
-
-All checks need to be synchronous functions and should return `true` if the
-check passes, `false` otherwise.
-
-```js
-import { addCheck } from "@axel669/aegis"
-
-// Checks if a value is a square number (doesn't take extra args)
-addCheck.value.isSq(
-    (value) => {
-        const root = Math.sqrt(value)
-        const fractional = root % 1
-        return fractional === 0
-    }
-)
-// checks if a string is the reverse of a target string
-addCheck.value.reverseOf(
-    (value, target) => value.split("").reverse().join("") === target
 )
 ```
