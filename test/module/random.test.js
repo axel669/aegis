@@ -53,3 +53,10 @@ aegis.test`Empty Checks`({
         $.check`empty prints different`()
     }
 })
+
+// uncomment to see how the lib handles when a test errors out
+// aegis.test`Throwing tests`({
+//     func: () => {
+//         throw new Error("Wat")
+//     }
+// })

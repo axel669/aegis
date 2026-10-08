@@ -94,6 +94,16 @@ export const hooks = {
     // Runs after all tests are finished and after all files have been handled
     "done": (results, defaultHook) => {}
 }
+
+// Set this to have a max timeout on any test that doesn't specify it's own
+// timeout. Default is 30s.
+export const timeout = 30_000
+
+// If true, then console.log statements that are in the test files will be
+// shown in the console while the tests are running. If false, the logs will
+// not be shown during the runtime. Regardless of the value, all the logs are
+// available in arrays in the results objects.
+export const logOutput = true
 ```
 
 **Data Format**
@@ -112,11 +122,13 @@ type Results = {
         name: string
         path: string
         // FileResult
+        logs: Array<string>
         tests: Array<{
             // TestInfo
             setup: bool
             name: string
             // TestResults
+            logs: Array<string>
             count: {
                 pass: int
                 fail: int

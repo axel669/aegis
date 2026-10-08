@@ -11,3 +11,6 @@ export const hooks = {
         console.log("This example shows how to use the default hooks + your code")
     }
 }
+
+// set to false to not show log output during tests
+export const logOutput = false

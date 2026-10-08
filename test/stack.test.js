@@ -27,6 +27,7 @@ aegis.test({
     },
     timeout: 3_000
 })
+
 aegis.test`Empty Stack`({
     func: async () => {
         $.check`throws when asked for top`(
@@ -43,6 +44,7 @@ aegis.test`Empty Stack`({
         )
     },
 })
+
 aegis.test`Non Empty Stack`({
     func: () => {
         items.push(2)
@@ -57,6 +59,7 @@ aegis.test`Non Empty Stack`({
         )
     },
 })
+
 aegis.test`Errors Print Properly`({
     func: () => {
         $.check`check failed`(
