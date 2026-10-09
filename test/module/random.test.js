@@ -54,9 +54,9 @@ aegis.test`Empty Checks`({
     }
 })
 
-// uncomment to see how the lib handles when a test errors out
-// aegis.test`Throwing tests`({
-//     func: () => {
-//         throw new Error("Wat")
-//     }
-// })
+// remove the skip to see how the lib handles when a test errors out
+aegis.test.skip`Throwing tests`({
+    func: () => {
+        throw new Error("Wat")
+    }
+})

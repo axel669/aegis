@@ -18,8 +18,8 @@ console.table([
 console.timeEnd("testing")
 
 export const name = "Stack"
-aegis.test({
-    name: "New Stack",
+aegis.test`New Stack`({
+    tags: ["empty", "stack"],
     func: async () => {
         $.check`is empty`(
             $.eq(items.size, 0)

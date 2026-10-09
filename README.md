@@ -31,6 +31,14 @@ what it runs.
 npx aegis -c [config-file]
 ```
 
+The CLI invocation can also pass `--tags` as an option with a string containing
+space/comma separate list of tags to only run certain tests. This optoin can
+also be defined in a config file, so if there is a common set of tags you want
+to run often you dont need a command that gets extra long for it.
+```bash
+npx aegis -c [config-file] --tags "some tags here"
+```
+
 <!-- The CLI command uses unique non-0 error codes when the test suite fails, with
 each error code representing a different condition for failure. This means that
 a command line script can react to the process results regardless of how the
@@ -104,6 +112,11 @@ export const timeout = 30_000
 // not be shown during the runtime. Regardless of the value, all the logs are
 // available in arrays in the results objects.
 export const logOutput = true
+
+// If set to an array with elements, only tests who contain at least one of the
+// tags in the array will be run. Default is an empty array, which does not
+// filter out any tests.
+export const tags = ["filter"]
 ```
 
 **Data Format**
@@ -128,6 +141,7 @@ type Results = {
             setup: bool
             name: string
             // TestResults
+            skipped: boolean
             logs: Array<string>
             count: {
                 pass: int
@@ -164,7 +178,42 @@ the fileState like a test, so can be used to setup file state for tests to use.
 Defines a test that can have any number of checks. Tests are executed in the
 order they are defined in the file, but Aegis handles running the actual
 functions. Code outside of test/setup functions will always run before any setup
-or test functions are, even if the code appears between test declarations.
+or test functions are, even if the code appears between test declarations. The
+test function actually tags a tagged template literal and then a second call
+to setup the test configuration.
+
+```js
+// can pass just the test function
+aegis.test`Creates Correct Range`(
+    () => {
+        $.check`number is in correct range`(
+            $.within(n, 0, 10)
+        )
+        $.check`type is correct`(
+            $.typeof(n, "number"),
+            $.instanceof(n, Number)
+        )
+    }
+)
+
+// or a config object with .func (and other options)
+aegis.test`Creates Correct Range`({
+    tags: ["example", "tags"],
+    func: () => {
+        $.check`number is in correct range`(
+            $.within(n, 0, 10)
+        )
+        $.check`type is correct`(
+            $.typeof(n, "number"),
+            $.instanceof(n, Number)
+        )
+    }
+})
+```
+
+### `aegis.test.skip`
+Makes a test get skipped (with reporting saying it was skipped). Useful when
+working in files where one test might be acting up or harder to get right.
 
 ### `$.check`
 Collects a series of checks under a name so that it can be reported out nicely.

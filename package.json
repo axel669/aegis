@@ -1,6 +1,6 @@
 {
   "name": "@axel669/aegis",
-  "version": "0.4.0-beta.1",
+  "version": "0.4.0-beta.3",
   "description": "Test runner for NodeJS and browsers",
   "main": "lib/runner.js",
   "type": "module",
